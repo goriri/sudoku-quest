@@ -60,7 +60,7 @@ def start_game(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    game = crud.create_active_game(db, current_user, request.size, request.difficulty)
+    game = crud.create_active_game(db, current_user, request.size)
     return game
 
 @app.get("/api/game/state", response_model=Optional[schemas.GameState])
@@ -147,61 +147,69 @@ def submit_game(
             coins_earned=0,
             new_level=current_user.current_level,
             new_zone=current_user.current_zone,
+            new_stage=game.stage,
+            stage_completed=False,
+            level_completed=False,
             xp_earned=0
         )
 
     # Award algorithm:
     # 4x4: base 10 coins, 20 xp
     # 6x6: base 20 coins, 40 xp
-    # 9x9: base 50 coins (easy), 75 (medium), 100 (hard); 100/150/200 xp
+    # 9x9: base 50 coins (easy/medium), 80 (hard), 120 (master); 100/150/200 xp
     base_coins = 10
     base_xp = 20
     if game.size == 6:
         base_coins = 25
         base_xp = 50
     elif game.size == 9:
-        if game.difficulty == "easy":
+        if game.difficulty == "medium":
             base_coins = 50
             base_xp = 100
-        elif game.difficulty == "medium":
+        elif game.difficulty == "hard":
             base_coins = 80
             base_xp = 150
-        else:
+        else: # master
             base_coins = 120
             base_xp = 200
 
-    # Add extra bonus if player didn't lose hearts
     heart_bonus = game.hearts * 5
     coins_earned = base_coins + heart_bonus
     xp_earned = base_xp + (game.hearts * 10)
 
-    # Apply progress progression
+    # Apply rewards
     current_user.coins += coins_earned
     current_user.xp += xp_earned
     
-    # Progress levels (Kid simple map: 5 levels per zone)
-    # Zone 1 (4x4): levels 1-5
-    # Zone 2 (6x6): levels 6-10
-    # Zone 3 (9x9): levels 11-15
-    next_level = current_user.current_level + 1
+    stage_completed = True
+    level_completed = False
+    next_level = current_user.current_level
     next_zone = current_user.current_zone
+    next_stage = game.stage
 
-    if next_level > 15:
-        # Loop level or cap at 15
-        next_level = 15
+    if game.stage < 3:
+        # Advance to next stage!
+        advanced_game = crud.advance_active_game_stage(db, game, current_user)
+        next_stage = advanced_game.stage
+        db.commit()
     else:
-        # Determine new zone
-        if next_level >= 11:
-            next_zone = 3
-        elif next_level >= 6:
-            next_zone = 2
-
-    current_user.current_level = next_level
-    current_user.current_zone = next_zone
-
-    # Remove active game
-    crud.delete_active_game(db, game)
-    db.commit()
+        # Level completed!
+        level_completed = True
+        next_stage = 1
+        next_level = current_user.current_level + 1
+        if next_level > 15:
+            next_level = 15
+        else:
+            if next_level >= 11:
+                next_zone = 3
+            elif next_level >= 6:
+                next_zone = 2
+                
+        current_user.current_level = next_level
+        current_user.current_zone = next_zone
+        
+        crud.delete_active_game(db, game)
+        db.commit()
 
     return schemas.GameSubmitResponse(
         success=True,
@@ -209,6 +217,9 @@ def submit_game(
         coins_earned=coins_earned,
         new_level=next_level,
         new_zone=next_zone,
+        new_stage=next_stage,
+        stage_completed=stage_completed,
+        level_completed=level_completed,
         xp_earned=xp_earned
     )
 

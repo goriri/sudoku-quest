@@ -78,8 +78,7 @@ test.describe('Sudoku Quest Adventure E2E', () => {
 
     // 5. Start Game (Level 1)
     await page.click('button:has-text("Play")', { force: true });
-    await page.click('div.fixed button:has-text("easy")', { force: true });
-    await expect(page.locator('text=QUEST LEVEL 1')).toBeVisible();
+    await expect(page.locator('text=STAGE 1 OF 3')).toBeVisible();
     await expect(page.locator('text=Wand (1)')).toBeVisible(); // 1 wand in inventory
 
     // 6. Fetch correct solution from DB
@@ -87,33 +86,23 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     expect(solution).not.toBeNull();
     expect(solution.length).toBe(4); // Zone 1 is 4x4
 
-    // 7. Solve Sudoku Board
-    // Iterate over the grid rows and columns in the DOM
-    // The grid is a 4x4 grid of buttons
+    // 7. Solve Sudoku Board (Stage 1)
     const cells = page.locator('div.grid-cols-4 button');
     
-    // Read the puzzle state from DOM to find empty cells and fill them
     for (let r = 0; r < 4; r++) {
       for (let c = 0; c < 4; c++) {
         const cellIndex = r * 4 + c;
         const cell = cells.nth(cellIndex);
         const cellText = await cell.innerText();
         
-        // If the cell is empty (has no emoji/number), we fill it
         if (cellText === '') {
           const correctVal = solution[r][c];
-          
-          // Click cell to select
           await cell.click();
           
-          // Click correct value on the keypad below
-          // By default, the board starts in "Magic Emojis" mode.
-          // Let's toggle to "Numbers" mode to make it easier for E2E automation
           if (r === 0 && c === 0 || (await page.locator('button:has-text("Numbers")').getAttribute('class')).includes('text-indigo-500')) {
             await page.click('button:has-text("Numbers")');
           }
           
-          // Click the number button on the keyboard
           await page.click(`div.flex-wrap button:has-text("${correctVal}")`);
         }
       }
@@ -122,16 +111,22 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     // 8. Submit Sudoku board
     await page.click('button:has-text("Submit Magic Grid")');
 
-    // 9. Assert win banner appears
-    await expect(page.locator('text=Quest Completed!')).toBeVisible();
+    // 9. Assert Stage Cleared banner appears
+    await expect(page.locator('text=Stage Cleared!')).toBeVisible();
     await expect(page.locator('text=Coins Earned:')).toBeVisible();
 
-    // 10. Click continue and assert progress
-    await page.click('button:has-text("Continue Journey")', { force: true });
+    // 10. Click Enter Stage 2 and assert transition
+    await page.click('button:has-text("Enter Stage 2")', { force: true });
+    await expect(page.locator('text=STAGE 2 OF 3')).toBeVisible();
+
+    // 11. Go Back to Map and verify Resume Quest button
+    await page.click('button:has-text("Back to Map")');
     await expect(page.locator('text=Your Magic Adventure')).toBeVisible();
-    
-    // Level progress assertion: they should be level 2 now!
-    await expect(page.locator('text=Level 2')).toBeVisible();
+    await expect(page.locator('button:has-text("Resume Saved Quest!")')).toBeVisible();
+
+    // 12. Click Resume and verify it loads Stage 2 back
+    await page.click('button:has-text("Resume Saved Quest!")', { force: true });
+    await expect(page.locator('text=STAGE 2 OF 3')).toBeVisible();
   });
 
   test('developer panel bypass: set level and coins', async ({ page }) => {

@@ -211,13 +211,43 @@ def test_submit_game_failure_and_success():
     assert submit_wrong_res.status_code == 200
     assert submit_wrong_res.json()["correct"] is False
 
-    # Submit CORRECT solution
+    # Submit CORRECT solution for Stage 1
     submit_correct_res = client.post("/api/game/submit", json={"grid": correct_solution}, headers=headers)
     assert submit_correct_res.status_code == 200
     res_data = submit_correct_res.json()
     assert res_data["correct"] is True
     assert res_data["coins_earned"] > 0
-    assert res_data["new_level"] == 2
+    assert res_data["new_level"] == 1
+    assert res_data["new_stage"] == 2
+    assert res_data["stage_completed"] is True
+    assert res_data["level_completed"] is False
+
+    # Submit CORRECT solution for Stage 2
+    db = TestingSessionLocal()
+    user = db.query(models.User).filter(models.User.username == "solver").first()
+    correct_solution2 = user.active_game.solution
+    db.close()
+
+    submit_correct_res2 = client.post("/api/game/submit", json={"grid": correct_solution2}, headers=headers)
+    assert submit_correct_res2.status_code == 200
+    res_data2 = submit_correct_res2.json()
+    assert res_data2["correct"] is True
+    assert res_data2["new_stage"] == 3
+    assert res_data2["level_completed"] is False
+
+    # Submit CORRECT solution for Stage 3
+    db = TestingSessionLocal()
+    user = db.query(models.User).filter(models.User.username == "solver").first()
+    correct_solution3 = user.active_game.solution
+    db.close()
+
+    submit_correct_res3 = client.post("/api/game/submit", json={"grid": correct_solution3}, headers=headers)
+    assert submit_correct_res3.status_code == 200
+    res_data3 = submit_correct_res3.json()
+    assert res_data3["correct"] is True
+    assert res_data3["new_level"] == 2
+    assert res_data3["new_stage"] == 1
+    assert res_data3["level_completed"] is True
 
     # Verify active game is cleaned up
     state_res = client.get("/api/game/state", headers=headers)

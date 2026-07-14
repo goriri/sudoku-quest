@@ -48,6 +48,7 @@ class GameState(BaseModel):
     original_grid: List[List[int]]
     size: int
     difficulty: str
+    stage: int
     hearts: int
     time_spent: int
 
@@ -68,6 +69,9 @@ class GameSubmitResponse(BaseModel):
     coins_earned: int
     new_level: int
     new_zone: int
+    new_stage: int
+    stage_completed: bool
+    level_completed: bool
     xp_earned: int
 
 # --- Shop Schemas ---

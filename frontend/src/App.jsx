@@ -11,6 +11,7 @@ export default function App() {
   const [activeLevel, setActiveLevel] = useState(null); // { size, difficulty }
   const [showShop, setShowShop] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeGame, setActiveGame] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -28,8 +29,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        // Check if there is an active saved game. If so, prompt to resume it!
-        checkActiveGame();
+        fetchActiveGame();
       } else {
         // Token expired
         handleLogout();
@@ -41,21 +41,24 @@ export default function App() {
     }
   };
 
-  const checkActiveGame = async () => {
+  const fetchActiveGame = async () => {
     try {
       const res = await fetch("/api/game/state", {
         headers: { "Authorization": `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data) {
-        const resume = window.confirm("🔮 You have a saved magic grid! Do you want to resume it?");
-        if (resume) {
-          setActiveLevel({ size: data.size, difficulty: data.difficulty });
-          setView("game");
-        }
+      if (res.ok) {
+        const data = await res.json();
+        setActiveGame(data);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch active game:", err);
+    }
+  };
+
+  const handleResumeGame = () => {
+    if (activeGame) {
+      setActiveLevel({ size: activeGame.size, difficulty: activeGame.difficulty });
+      setView("game");
     }
   };
 
@@ -98,10 +101,12 @@ export default function App() {
       {view === "map" ? (
         <Map
           profile={profile}
+          activeGame={activeGame}
           onSelectLevel={handleSelectLevel}
           onOpenShop={() => setShowShop(true)}
           onLogout={handleLogout}
           onUpdateProfile={fetchProfile}
+          onResumeGame={handleResumeGame}
         />
       ) : (
         <Game

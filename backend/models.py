@@ -40,6 +40,7 @@ class ActiveGame(Base):
     
     size = Column(Integer, nullable=False) # 4, 6, 9
     difficulty = Column(String, nullable=False)
+    stage = Column(Integer, default=1)
     hearts = Column(Integer, default=3)
     time_spent = Column(Integer, default=0) # in seconds
 

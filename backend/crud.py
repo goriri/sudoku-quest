@@ -51,11 +51,30 @@ def get_user_profile(db: Session, user: models.User):
     db.refresh(user)
     return user
 
-def create_active_game(db: Session, user: models.User, size: int, difficulty: str):
+def get_difficulty_for_stage(size: int, stage: int) -> str:
+    if size == 9:
+        if stage == 1:
+            return "medium"
+        elif stage == 2:
+            return "hard"
+        else:
+            return "master"
+    else:
+        if stage == 1:
+            return "easy"
+        elif stage == 2:
+            return "medium"
+        else:
+            return "hard"
+
+def create_active_game(db: Session, user: models.User, size: int):
     # Clean up old game
     if user.active_game:
         db.delete(user.active_game)
         db.commit()
+
+    stage = 1
+    difficulty = get_difficulty_for_stage(size, stage)
 
     # Generate Sudoku board
     sl = SudokuLogic(size=size)
@@ -68,6 +87,7 @@ def create_active_game(db: Session, user: models.User, size: int, difficulty: st
         original_grid=puzzle,
         size=size,
         difficulty=difficulty,
+        stage=stage,
         hearts=3,
         time_spent=0
     )
@@ -75,6 +95,25 @@ def create_active_game(db: Session, user: models.User, size: int, difficulty: st
     db.commit()
     db.refresh(db_game)
     return db_game
+
+def advance_active_game_stage(db: Session, game: models.ActiveGame, user: models.User):
+    next_stage = game.stage + 1
+    new_difficulty = get_difficulty_for_stage(game.size, next_stage)
+    
+    sl = SudokuLogic(size=game.size)
+    puzzle, solution = sl.generate_puzzle(new_difficulty, user.current_level)
+    
+    game.stage = next_stage
+    game.difficulty = new_difficulty
+    game.grid = puzzle
+    game.original_grid = puzzle
+    game.solution = solution
+    game.hearts = 3 # restore lives
+    
+    db.commit()
+    db.refresh(game)
+    return game
+
 
 def update_active_game(db: Session, game: models.ActiveGame, move: schemas.GameMoveRequest):
     game.grid = move.grid

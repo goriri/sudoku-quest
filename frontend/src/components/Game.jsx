@@ -32,6 +32,7 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
   const [monsterAttacking, setMonsterAttacking] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [showOutOfLivesModal, setShowOutOfLivesModal] = useState(false);
+  const [spellProjectile, setSpellProjectile] = useState(null); // { type: 'player' | 'monster', emoji }
 
   // Timer reference
   const timerRef = useRef(null);
@@ -180,9 +181,15 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         // Attack animations
         setPlayerAttacking(true);
         setMonsterHit(true);
+        const playerSpells = ["⚡", "🔥", "❄️", "✨", "☄️", "💫"];
+        setSpellProjectile({
+          type: "player",
+          emoji: playerSpells[Math.floor(Math.random() * playerSpells.length)]
+        });
         setTimeout(() => {
           setPlayerAttacking(false);
           setMonsterHit(false);
+          setSpellProjectile(null);
         }, 600);
 
         // Update Monster Health
@@ -191,9 +198,15 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         // Mistake animations
         setMonsterAttacking(true);
         setPlayerHit(true);
+        const monsterSpells = ["💀", "💥", "🩸", "👾", "🌀"];
+        setSpellProjectile({
+          type: "monster",
+          emoji: monsterSpells[Math.floor(Math.random() * monsterSpells.length)]
+        });
         setTimeout(() => {
           setMonsterAttacking(false);
           setPlayerHit(false);
+          setSpellProjectile(null);
         }, 600);
 
         if (activeShield) {
@@ -472,11 +485,18 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
     return match ? match.quantity : 0;
   };
 
+  const getDifficultyBadge = (diff) => {
+    if (diff === "easy") return "bg-green-100 text-green-700 border-green-200";
+    if (diff === "medium") return "bg-blue-100 text-blue-700 border-blue-200";
+    if (diff === "hard") return "bg-orange-100 text-orange-700 border-orange-200";
+    return "bg-red-100 text-red-700 border-red-200"; // expert/master
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 pb-20">
       
       {/* Top Bar Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <button
           onClick={onBackToMap}
           className="flex items-center gap-1.5 text-indigo-700 font-bold bg-white/80 hover:bg-white px-4 py-2 rounded-2xl border-2 border-indigo-100 shadow-sm cursor-pointer"
@@ -485,20 +505,40 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
           <span>Back to Map</span>
         </button>
 
-        {/* Level Banner */}
-        <div className="bg-candy-purple text-white px-5 py-2 rounded-2xl font-extrabold text-sm shadow-md flex items-center gap-1.5">
-          <Award size={18} />
-          <span>QUEST LEVEL {profile.current_level}</span>
-        </div>
+        {/* Level, Stage & Difficulty Badges */}
+        {gameState && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="bg-candy-purple text-white px-4 py-1.5 rounded-2xl font-extrabold text-xs shadow-md flex items-center gap-1.5">
+              <Award size={14} />
+              <span>LEVEL {profile.current_level}</span>
+            </div>
+            <div className="bg-indigo-50 border-2 border-indigo-100 text-indigo-700 px-3 py-1 rounded-2xl font-extrabold text-xs">
+              STAGE {gameState.stage} OF 3
+            </div>
+            <div className={`border-2 px-3 py-1 rounded-2xl font-extrabold text-xs capitalize ${getDifficultyBadge(gameState.difficulty)}`}>
+              {gameState.difficulty}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* WIN OVERLAY IF LEVEL COMPLETED */}
+      {/* WIN OVERLAY IF STAGE/LEVEL COMPLETED */}
       {winData && (
         <div className="fixed inset-0 bg-indigo-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 border-4 border-candy-purple text-center shadow-2xl animate-playful">
-            <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-3xl font-extrabold text-indigo-900 mb-2">Quest Completed!</h2>
-            <p className="text-sm font-semibold text-indigo-500 mb-6">Excellent solving, young apprentice!</p>
+            {winData.level_completed ? (
+              <>
+                <div className="text-6xl mb-4">🏆</div>
+                <h2 className="text-3xl font-extrabold text-indigo-900 mb-2">Quest Completed!</h2>
+                <p className="text-sm font-semibold text-indigo-500 mb-6">Excellent solving, young apprentice!</p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">🌟</div>
+                <h2 className="text-3xl font-extrabold text-indigo-900 mb-2">Stage Cleared!</h2>
+                <p className="text-sm font-semibold text-indigo-500 mb-6">Great job beating the monster! Prepare for the next wave!</p>
+              </>
+            )}
             
             <div className="bg-indigo-50 rounded-2xl p-4 space-y-3 mb-6 border-2 border-indigo-100">
               <div className="flex justify-between items-center font-extrabold text-indigo-900">
@@ -510,20 +550,44 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
                 <span className="text-purple-600">+{winData.xp_earned} XP</span>
               </div>
               <div className="flex justify-between items-center font-extrabold text-indigo-900">
-                <span>Next Quest Level:</span>
-                <span className="text-indigo-600">Level {winData.new_level}</span>
+                {winData.level_completed ? (
+                  <>
+                    <span>Next Quest Level:</span>
+                    <span className="text-indigo-600">Level {winData.new_level}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Next Stage:</span>
+                    <span className="text-indigo-600">Stage {winData.new_stage} of 3</span>
+                  </>
+                )}
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                onUpdateProfile();
-                onBackToMap();
-              }}
-              className="w-full bg-gradient-to-r from-candy-purple to-indigo-600 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all text-lg cursor-pointer"
-            >
-              Continue Journey
-            </button>
+            {winData.level_completed ? (
+              <button
+                onClick={() => {
+                  onUpdateProfile();
+                  onBackToMap();
+                }}
+                className="w-full bg-gradient-to-r from-candy-purple to-indigo-600 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all text-lg cursor-pointer"
+              >
+                Continue Journey
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  onUpdateProfile();
+                  setWinData(null);
+                  setGameState(null);
+                  setLoading(true);
+                  await fetchGame();
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all text-lg cursor-pointer animate-pulse"
+              >
+                Enter Stage {winData.new_stage} ⚔️
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -617,6 +681,19 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         {/* Combat Battle Arena */}
         <div className="bg-indigo-950 text-white rounded-3xl p-4 mb-6 border-4 border-indigo-900 flex justify-between items-center relative overflow-hidden h-36 shadow-inner">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent pointer-events-none" />
+
+          {/* Flying Spell Projectile */}
+          {spellProjectile && (
+            <span
+              className={`absolute text-4xl z-30 pointer-events-none ${
+                spellProjectile.type === "player"
+                  ? "left-24 top-10 animate-projectile-right"
+                  : "right-24 top-10 animate-projectile-left"
+              }`}
+            >
+              {spellProjectile.emoji}
+            </span>
+          )}
 
           {/* Player Side */}
           <div className={`flex flex-col items-center gap-1 transition-all duration-300 w-24 ${playerAttacking ? 'translate-x-12 scale-110 z-20' : ''} ${playerHit ? 'animate-shake bg-red-900/40 rounded-2xl p-2' : ''}`}>
