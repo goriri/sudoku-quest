@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { Lock, Play, ShoppingBag, LogOut, Award, Coins, X } from "lucide-react";
+import { Lock, Play, ShoppingBag, LogOut, Award, Coins, X, Wrench } from "lucide-react";
 import { AVATARS } from "../utils/magic_emojis";
 
-export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
+export default function Map({ profile, onSelectLevel, onOpenShop, onLogout, onUpdateProfile }) {
   const [difficultyModal, setDifficultyModal] = useState(false);
   const [pendingGridSize, setPendingGridSize] = useState(null);
+  
+  // Dev Cheats Panel States
+  const [showDevPanel, setShowDevPanel] = useState(false);
+  const [devLevel, setDevLevel] = useState(profile.current_level);
+  const [devCoins, setDevCoins] = useState(profile.coins);
 
   // Define zones mapping
   const zones = [
@@ -45,6 +50,25 @@ export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
       difficulty: "hard"
     }
   ];
+
+  const handleApplyDevCheats = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`/api/debug/set-progress?level=${devLevel}&coins=${devCoins}`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setShowDevPanel(false);
+        onUpdateProfile();
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Cheat application failed!");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const getAvatarInfo = () => {
     return AVATARS[profile.avatar] || { label: "Adventurer", color: "from-purple-400 to-indigo-500" };
@@ -89,6 +113,15 @@ export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
           >
             <ShoppingBag size={20} />
             <span>Magic Shop</span>
+          </button>
+
+          {/* Dev Cheats Panel Trigger */}
+          <button
+            onClick={() => setShowDevPanel(true)}
+            className="p-2 text-amber-500 hover:text-amber-600 rounded-2xl hover:bg-amber-50 cursor-pointer"
+            title="🔧 Developer Cheats"
+          >
+            <Wrench size={22} />
           </button>
 
           {/* Logout */}
@@ -217,6 +250,54 @@ export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dev Cheats Panel Modal */}
+      {showDevPanel && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 border-4 border-amber-500 text-center shadow-2xl relative animate-playful">
+            <button
+              onClick={() => setShowDevPanel(false)}
+              className="absolute top-4 right-4 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-full text-amber-700 cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            <h3 className="text-2xl font-black text-amber-600 mb-2">🔧 Developer Portal</h3>
+            <p className="text-xs text-indigo-500 font-semibold mb-6">Modify quest level and mana coins instantly!</p>
+            
+            <div className="space-y-4 mb-6">
+              <div className="text-left">
+                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Quest Level (1-15)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="15"
+                  value={devLevel}
+                  onChange={(e) => setDevLevel(parseInt(e.target.value) || 1)}
+                  className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              
+              <div className="text-left">
+                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Mana Coins</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={devCoins}
+                  onChange={(e) => setDevCoins(parseInt(e.target.value) || 0)}
+                  className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleApplyDevCheats}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm cursor-pointer"
+            >
+              Cast Magic Cheat Spell!
+            </button>
           </div>
         </div>
       )}

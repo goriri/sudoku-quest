@@ -101,6 +101,7 @@ export default function App() {
           onSelectLevel={handleSelectLevel}
           onOpenShop={() => setShowShop(true)}
           onLogout={handleLogout}
+          onUpdateProfile={fetchProfile}
         />
       ) : (
         <Game

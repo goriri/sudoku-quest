@@ -249,6 +249,35 @@ def buy_item(
         remaining_coins=current_user.coins
     )
 
+@app.post("/api/debug/set-progress")
+def set_progress(
+    level: int,
+    coins: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    if level < 1 or level > 15:
+        raise HTTPException(status_code=400, detail="Level must be between 1 and 15")
+    
+    if level <= 5:
+        zone = 1
+    elif level <= 10:
+        zone = 2
+    else:
+        zone = 3
+        
+    current_user.current_level = level
+    current_user.current_zone = zone
+    current_user.coins = coins
+    
+    if current_user.active_game:
+        db.delete(current_user.active_game)
+        
+    db.commit()
+    db.refresh(current_user)
+    return {"success": True, "message": f"Progress set to Level {level}, Coins {coins}"}
+
+
 # Static files hosting (for serving production React builds)
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 static_path = os.path.join(base_dir, "frontend", "dist")

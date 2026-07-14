@@ -270,3 +270,29 @@ def test_validate_cell_and_hint():
     assert hint_res.status_code == 200
     assert hint_res.json()["val"] == correct_val
 
+
+def test_set_progress():
+    client.post(
+        "/api/auth/register",
+        json={"username": "debuguser", "password": "password123"}
+    )
+    login_res = client.post(
+        "/api/auth/login",
+        json={"username": "debuguser", "password": "password123"}
+    )
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Set progress to level 12 and 500 coins
+    res = client.post("/api/debug/set-progress?level=12&coins=500", headers=headers)
+    assert res.status_code == 200
+    assert res.json()["success"] is True
+
+    # Check profile
+    profile_res = client.get("/api/auth/profile", headers=headers)
+    profile = profile_res.json()
+    assert profile["current_level"] == 12
+    assert profile["current_zone"] == 3
+    assert profile["coins"] == 500
+
+

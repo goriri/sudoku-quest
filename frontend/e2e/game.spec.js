@@ -133,4 +133,36 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     // Level progress assertion: they should be level 2 now!
     await expect(page.locator('text=Level 2')).toBeVisible();
   });
+
+  test('developer panel bypass: set level and coins', async ({ page }) => {
+    const devUsername = `dev_hero_${Date.now()}`;
+    await page.goto('/');
+
+    // Register User
+    await page.click('text=Create a character');
+    await page.fill('[placeholder="Enter character name..."]', devUsername);
+    await page.fill('[placeholder="Enter secret password..."]', password);
+    await page.click('text=Elf Elwin');
+    await page.click('button:has-text("Start Adventure!")');
+
+    await expect(page.locator('text=Your Magic Adventure')).toBeVisible();
+    await expect(page.locator('text=Level 1')).toBeVisible();
+    await expect(page.locator('text=100')).toBeVisible();
+
+    // Click Dev Tools wrench button
+    await page.click('button[title="🔧 Developer Cheats"]', { force: true });
+    await expect(page.locator('h3:has-text("Developer Portal")')).toBeVisible();
+
+    // Fill level 12 and 600 coins
+    await page.fill('input[type="number"] >> nth=0', '12');
+    await page.fill('input[type="number"] >> nth=1', '600');
+
+    // Click apply cheats button
+    await page.click('button:has-text("Cast Magic Cheat Spell!")', { force: true });
+
+    // Verify stats updated on Map page
+    await expect(page.locator('text=Level 12')).toBeVisible();
+    await expect(page.locator('text=600')).toBeVisible();
+  });
 });
+
