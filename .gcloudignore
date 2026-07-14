@@ -1,0 +1,18 @@
+# Standard git and build ignores
+.git
+.gitignore
+
+# Python ignores
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+
+# Frontend ignores
+frontend/node_modules/
+frontend/dist/
+node_modules/
+
+# OS metadata
+.DS_Store
