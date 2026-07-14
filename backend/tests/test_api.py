@@ -235,19 +235,42 @@ def test_submit_game_failure_and_success():
     assert res_data2["new_stage"] == 3
     assert res_data2["level_completed"] is False
 
-    # Submit CORRECT solution for Stage 3
+    # Fast forward active game stage to 49 to test level completion
     db = TestingSessionLocal()
     user = db.query(models.User).filter(models.User.username == "solver").first()
-    correct_solution3 = user.active_game.solution
+    user.active_game.stage = 49
+    # Regenerate puzzle for difficulty mapped to stage 49 (which is 'hard')
+    sl = crud.SudokuLogic(size=user.active_game.size)
+    puzzle, solution = sl.generate_puzzle("hard", user.current_level)
+    user.active_game.grid = puzzle
+    user.active_game.original_grid = puzzle
+    user.active_game.solution = solution
+    db.commit()
+    correct_solution49 = solution
     db.close()
 
-    submit_correct_res3 = client.post("/api/game/submit", json={"grid": correct_solution3}, headers=headers)
-    assert submit_correct_res3.status_code == 200
-    res_data3 = submit_correct_res3.json()
-    assert res_data3["correct"] is True
-    assert res_data3["new_level"] == 2
-    assert res_data3["new_stage"] == 1
-    assert res_data3["level_completed"] is True
+    # Submit CORRECT solution for Stage 49
+    submit_correct_res49 = client.post("/api/game/submit", json={"grid": correct_solution49}, headers=headers)
+    assert submit_correct_res49.status_code == 200
+    res_data49 = submit_correct_res49.json()
+    assert res_data49["correct"] is True
+    assert res_data49["new_stage"] == 50
+    assert res_data49["level_completed"] is False
+
+    # Get solution for Stage 50
+    db = TestingSessionLocal()
+    user = db.query(models.User).filter(models.User.username == "solver").first()
+    correct_solution50 = user.active_game.solution
+    db.close()
+
+    # Submit CORRECT solution for Stage 50
+    submit_correct_res50 = client.post("/api/game/submit", json={"grid": correct_solution50}, headers=headers)
+    assert submit_correct_res50.status_code == 200
+    res_data50 = submit_correct_res50.json()
+    assert res_data50["correct"] is True
+    assert res_data50["new_level"] == 2
+    assert res_data50["new_stage"] == 1
+    assert res_data50["level_completed"] is True
 
     # Verify active game is cleaned up
     state_res = client.get("/api/game/state", headers=headers)

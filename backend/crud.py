@@ -53,16 +53,20 @@ def get_user_profile(db: Session, user: models.User):
 
 def get_difficulty_for_stage(size: int, stage: int) -> str:
     if size == 9:
-        if stage == 1:
+        if stage <= 10:
+            return "easy"
+        elif stage <= 25:
             return "medium"
-        elif stage == 2:
+        elif stage <= 40:
             return "hard"
+        elif stage <= 47:
+            return "expert"
         else:
             return "master"
     else:
-        if stage == 1:
+        if stage <= 15:
             return "easy"
-        elif stage == 2:
+        elif stage <= 35:
             return "medium"
         else:
             return "hard"

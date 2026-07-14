@@ -78,7 +78,7 @@ test.describe('Sudoku Quest Adventure E2E', () => {
 
     // 5. Start Game (Level 1)
     await page.click('button:has-text("Play")', { force: true });
-    await expect(page.locator('text=STAGE 1 OF 3')).toBeVisible();
+    await expect(page.locator('text=STAGE 1 OF 50')).toBeVisible();
     await expect(page.locator('text=Wand (1)')).toBeVisible(); // 1 wand in inventory
 
     // 6. Fetch correct solution from DB
@@ -117,7 +117,7 @@ test.describe('Sudoku Quest Adventure E2E', () => {
 
     // 10. Click Enter Stage 2 and assert transition
     await page.click('button:has-text("Enter Stage 2")', { force: true });
-    await expect(page.locator('text=STAGE 2 OF 3')).toBeVisible();
+    await expect(page.locator('text=STAGE 2 OF 50')).toBeVisible();
 
     // 11. Go Back to Map and verify Resume Quest button
     await page.click('button:has-text("Back to Map")');
@@ -126,7 +126,7 @@ test.describe('Sudoku Quest Adventure E2E', () => {
 
     // 12. Click Resume and verify it loads Stage 2 back
     await page.click('button:has-text("Resume Saved Quest!")', { force: true });
-    await expect(page.locator('text=STAGE 2 OF 3')).toBeVisible();
+    await expect(page.locator('text=STAGE 2 OF 50')).toBeVisible();
   });
 
   test('developer panel bypass: set level and coins', async ({ page }) => {

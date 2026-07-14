@@ -187,7 +187,7 @@ def submit_game(
     next_zone = current_user.current_zone
     next_stage = game.stage
 
-    if game.stage < 3:
+    if game.stage < 50:
         # Advance to next stage!
         advanced_game = crud.advance_active_game_stage(db, game, current_user)
         next_stage = advanced_game.stage

@@ -513,7 +513,7 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
               <span>LEVEL {profile.current_level}</span>
             </div>
             <div className="bg-indigo-50 border-2 border-indigo-100 text-indigo-700 px-3 py-1 rounded-2xl font-extrabold text-xs">
-              STAGE {gameState.stage} OF 3
+              STAGE {gameState.stage} OF 50
             </div>
             <div className={`border-2 px-3 py-1 rounded-2xl font-extrabold text-xs capitalize ${getDifficultyBadge(gameState.difficulty)}`}>
               {gameState.difficulty}
@@ -558,7 +558,7 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
                 ) : (
                   <>
                     <span>Next Stage:</span>
-                    <span className="text-indigo-600">Stage {winData.new_stage} of 3</span>
+                    <span className="text-indigo-600">Stage {winData.new_stage} of 50</span>
                   </>
                 )}
               </div>

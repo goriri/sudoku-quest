@@ -138,7 +138,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
           onClick={onResumeGame}
           className="w-full mb-8 bg-gradient-to-r from-candy-purple to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition-all text-base animate-playful cursor-pointer flex items-center justify-center gap-2 border-4 border-indigo-200"
         >
-          🔮 Resume Saved Quest! (Quest Level {profile.current_level} - Stage {activeGame.stage} of 3)
+          🔮 Resume Saved Quest! (Quest Level {profile.current_level} - Stage {activeGame.stage} of 50)
         </button>
       )}
 
