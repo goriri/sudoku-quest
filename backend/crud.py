@@ -7,7 +7,8 @@ import json
 ITEM_PRICES = {
     "hint_wand": 30,
     "crystal_shield": 50,
-    "hourglass": 20
+    "hourglass": 20,
+    "life_potion": 15
 }
 
 def get_user_by_username(db: Session, username: str):
@@ -58,7 +59,7 @@ def create_active_game(db: Session, user: models.User, size: int, difficulty: st
 
     # Generate Sudoku board
     sl = SudokuLogic(size=size)
-    puzzle, solution = sl.generate_puzzle(difficulty)
+    puzzle, solution = sl.generate_puzzle(difficulty, user.current_level)
 
     db_game = models.ActiveGame(
         user_id=user.id,

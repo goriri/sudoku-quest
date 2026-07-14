@@ -221,6 +221,12 @@ def use_item(
     success, error = crud.use_item(db, current_user, item_type)
     if not success:
         raise HTTPException(status_code=400, detail=error)
+    
+    if item_type == "life_potion" and current_user.active_game:
+        current_user.active_game.hearts = min(3, current_user.active_game.hearts + 1)
+        db.commit()
+        db.refresh(current_user.active_game)
+        
     return {"success": True, "message": f"Used {item_type} successfully"}
 
 

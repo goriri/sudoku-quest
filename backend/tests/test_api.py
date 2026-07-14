@@ -79,7 +79,7 @@ def test_authenticated_profile():
     assert profile_res.status_code == 200
     profile = profile_res.json()
     assert profile["username"] == "gamer"
-    assert len(profile["inventory"]) == 3
+    assert len(profile["inventory"]) == 4
 
 def test_game_flow():
     client.post(
@@ -155,6 +155,32 @@ def test_shop_and_use_items():
     profile2 = profile_res2.json()
     wand_item2 = next(item for item in profile2["inventory"] if item["item_type"] == "hint_wand")
     assert wand_item2["quantity"] == 1
+
+    # Now let's test buying and using life_potion
+    # 1. Earn more coins to buy potion. Starting profile had 40 coins. Buy a potion for 15 coins.
+    buy_potion_res = client.post("/api/shop/buy", json={"item_type": "life_potion", "quantity": 1}, headers=headers)
+    assert buy_potion_res.status_code == 200
+    assert buy_potion_res.json()["remaining_coins"] == 25  # 40 - 15 = 25
+
+    # 2. Start a game to have active game state
+    client.post("/api/game/start", json={"size": 4, "difficulty": "easy"}, headers=headers)
+    
+    # 3. Simulate losing a heart (update hearts from 3 to 2)
+    state_res = client.get("/api/game/state", headers=headers)
+    grid = state_res.json()["grid"]
+    client.post("/api/game/save", json={"grid": grid, "hearts": 2, "time_spent": 10}, headers=headers)
+    
+    # Verify current hearts is 2
+    verify_res = client.get("/api/game/state", headers=headers)
+    assert verify_res.json()["hearts"] == 2
+
+    # 4. Use the life potion
+    use_potion_res = client.post("/api/game/use-item?item_type=life_potion", headers=headers)
+    assert use_potion_res.status_code == 200
+
+    # 5. Verify hearts is incremented back to 3
+    verify_res2 = client.get("/api/game/state", headers=headers)
+    assert verify_res2.json()["hearts"] == 3
 
 def test_submit_game_failure_and_success():
     client.post(

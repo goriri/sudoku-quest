@@ -78,6 +78,7 @@ test.describe('Sudoku Quest Adventure E2E', () => {
 
     // 5. Start Game (Level 1)
     await page.click('button:has-text("Play")', { force: true });
+    await page.click('div.fixed button:has-text("easy")', { force: true });
     await expect(page.locator('text=QUEST LEVEL 1')).toBeVisible();
     await expect(page.locator('text=Wand (1)')).toBeVisible(); // 1 wand in inventory
 

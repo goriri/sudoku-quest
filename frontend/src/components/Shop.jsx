@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Coins, Shield, Wand2, Hourglass, X } from "lucide-react";
+import { Coins, Shield, Wand2, Hourglass, X, Heart } from "lucide-react";
 
 export default function Shop({ profile, onClose, onPurchaseSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -29,6 +29,14 @@ export default function Shop({ profile, onClose, onPurchaseSuccess }) {
       cost: 20,
       icon: <Hourglass className="text-candy-yellow" size={32} />,
       color: "border-candy-yellow bg-yellow-50/50"
+    },
+    {
+      type: "life_potion",
+      name: "Life Potion",
+      description: "Restores +1 heart/life during your quest!",
+      cost: 15,
+      icon: <Heart className="text-red-500 fill-red-400" size={32} />,
+      color: "border-red-200 bg-red-50/50"
     }
   ];
 

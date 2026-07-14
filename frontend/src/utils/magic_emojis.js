@@ -11,8 +11,8 @@ export const MAGIC_EMOJIS = {
 };
 
 export const AVATARS = {
-  wizard: { label: "🧙‍♂️ Wizard Willie", color: "from-purple-400 to-indigo-500" },
-  fairy: { label: "🧚‍♀️ Fairy Fiona", color: "from-pink-400 to-rose-500" },
-  knight: { label: "🛡️ Knight Kevin", color: "from-blue-400 to-cyan-500" },
-  elf: { label: "🧝‍♂️ Elf Elwin", color: "from-emerald-400 to-teal-500" }
+  wizard: { label: "🧙‍♂️ Wizard Willie", color: "from-purple-400 to-indigo-500", emoji: "🧙‍♂️" },
+  fairy: { label: "🧚‍♀️ Fairy Fiona", color: "from-pink-400 to-rose-500", emoji: "🧚‍♀️" },
+  knight: { label: "🛡️ Knight Kevin", color: "from-blue-400 to-cyan-500", emoji: "🛡️" },
+  elf: { label: "🧝‍♂️ Elf Elwin", color: "from-emerald-400 to-teal-500", emoji: "🧝‍♂️" }
 };

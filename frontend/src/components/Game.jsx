@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Heart, Clock, ArrowLeft, Wand2, Shield, Hourglass, Award, Sparkles } from "lucide-react";
-import { MAGIC_EMOJIS } from "../utils/magic_emojis";
+import { Heart, Clock, ArrowLeft, Wand2, Shield, Hourglass, Award, Sparkles, X } from "lucide-react";
+import { MAGIC_EMOJIS, AVATARS } from "../utils/magic_emojis";
 import confetti from "canvas-confetti";
 
 export default function Game({ size, difficulty, profile, onBackToMap, onUpdateProfile }) {
+  const monster = (() => {
+    const lvl = profile.current_level;
+    if (lvl <= 5) {
+      return { name: "Forest Slime", avatar: "👻" };
+    } else if (lvl <= 10) {
+      return { name: "Cave Troll", avatar: "👹" };
+    } else {
+      return { name: "Lava Dragon", avatar: "🐉" };
+    }
+  })();
+
   const [gameState, setGameState] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null); // { r, c }
   const [useEmojis, setUseEmojis] = useState(true);
@@ -12,6 +23,15 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [winData, setWinData] = useState(null);
+
+  // Combat States
+  const [monsterHp, setMonsterHp] = useState(100);
+  const [totalEmptyCells, setTotalEmptyCells] = useState(1);
+  const [playerAttacking, setPlayerAttacking] = useState(false);
+  const [monsterHit, setMonsterHit] = useState(false);
+  const [monsterAttacking, setMonsterAttacking] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
+  const [showOutOfLivesModal, setShowOutOfLivesModal] = useState(false);
 
   // Timer reference
   const timerRef = useRef(null);
@@ -65,6 +85,14 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         data = await res.json();
       }
 
+      const total = data.original_grid.reduce((acc, row) => acc + row.filter(c => c === 0).length, 0);
+      const originalFilled = data.original_grid.reduce((acc, row) => acc + row.filter(c => c !== 0).length, 0);
+      const currentFilled = data.grid.reduce((acc, row) => acc + row.filter(c => c !== 0).length, 0);
+      const solvedCount = currentFilled - originalFilled;
+      const calculatedHp = Math.max(0, 100 - (solvedCount * (100 / (total || 1))));
+
+      setTotalEmptyCells(total || 1);
+      setMonsterHp(calculatedHp);
       setGameState(data);
       startTimer(data.time_spent);
     } catch (err) {
@@ -148,11 +176,28 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
 
       if (data.correct) {
         newGrid[r][c] = val;
-        // Sparkle sound or visual feedback
+        
+        // Attack animations
+        setPlayerAttacking(true);
+        setMonsterHit(true);
+        setTimeout(() => {
+          setPlayerAttacking(false);
+          setMonsterHit(false);
+        }, 600);
+
+        // Update Monster Health
+        setMonsterHp((prev) => Math.max(0, prev - (100 / totalEmptyCells)));
       } else {
-        // Mistake!
+        // Mistake animations
+        setMonsterAttacking(true);
+        setPlayerHit(true);
+        setTimeout(() => {
+          setMonsterAttacking(false);
+          setPlayerHit(false);
+        }, 600);
+
         if (activeShield) {
-          setActiveShield(false); // Shield breaks!
+          setActiveShield(false);
           alert("🛡️ Crystal Shield absorbed the mistake! Your heart is safe!");
         } else {
           newHearts -= 1;
@@ -165,14 +210,12 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         hearts: newHearts
       }));
 
-      // Trigger auto-save immediately on change
       saveGameToServer(newGrid, newHearts, gameState.time_spent);
 
       if (newHearts <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
-        alert("💀 Oh no! You ran out of magic hearts! Let's start the level again!");
-        // Re-generate or restart
-        fetchGame();
+        // Trigger Out of Lives Modal!
+        setShowOutOfLivesModal(true);
       }
     } catch (err) {
       console.error(err);
@@ -265,6 +308,89 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
       console.error(err);
     }
   };
+
+  const handleUsePotion = async () => {
+    if (gameState.hearts >= 3) {
+      alert("Your magic hearts are already full!");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`/api/game/use-item?item_type=life_potion`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail);
+        return;
+      }
+
+      setGameState((prev) => {
+        const newHearts = Math.min(3, prev.hearts + 1);
+        saveGameToServer(prev.grid, newHearts, prev.time_spent);
+        return { ...prev, hearts: newHearts };
+      });
+      onUpdateProfile();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleBuyLife = async () => {
+    if (profile.coins < 15) {
+      alert("Not enough coins! You must restart the quest.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    try {
+      // 1. Buy life potion
+      let res = await fetch("/api/shop/buy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ item_type: "life_potion", quantity: 1 })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail);
+        return;
+      }
+
+      // 2. Use life potion
+      res = await fetch("/api/game/use-item?item_type=life_potion", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.detail);
+        return;
+      }
+
+      // 3. Update client state
+      setGameState((prev) => {
+        const newHearts = Math.min(3, prev.hearts + 1);
+        saveGameToServer(prev.grid, newHearts, prev.time_spent);
+        return { ...prev, hearts: newHearts };
+      });
+
+      onUpdateProfile();
+      setShowOutOfLivesModal(false);
+      startTimer(gameState.time_spent);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -402,6 +528,61 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         </div>
       )}
 
+      {/* OUT OF LIVES BUY-BACK MODAL */}
+      {showOutOfLivesModal && (
+        <div className="fixed inset-0 bg-indigo-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 border-4 border-red-500 text-center shadow-2xl animate-playful relative">
+            <div className="text-5xl mb-4">💀</div>
+            <h2 className="text-2xl font-black text-red-600 mb-2">Defeated by the Monster!</h2>
+            <p className="text-xs text-indigo-500 font-semibold mb-6">
+              You are out of magic hearts! Purchase a Life Potion to heal and continue the battle, or retreat to the map.
+            </p>
+            
+            <div className="bg-indigo-50 rounded-2xl p-4 mb-6 border-2 border-indigo-100 flex items-center justify-between">
+              <div className="text-left">
+                <div className="text-xs text-indigo-400 font-bold uppercase">Your Coins</div>
+                <div className="text-lg font-black text-indigo-900">{profile.coins} 🟡</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-red-400 font-bold uppercase">Potion Cost</div>
+                <div className="text-lg font-black text-red-600">15 🟡</div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleBuyLife}
+                disabled={profile.coins < 15}
+                className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm cursor-pointer"
+              >
+                {profile.coins >= 15 ? "Buy Life Potion & Revive (15 🟡)" : "Not Enough Coins!"}
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowOutOfLivesModal(false);
+                  fetchGame(); // restarts level
+                }}
+                className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl border border-indigo-200 transition-all text-xs cursor-pointer"
+              >
+                Restart Level (Lose Progress)
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowOutOfLivesModal(false);
+                  onBackToMap();
+                }}
+                className="w-full text-indigo-400 hover:text-indigo-600 font-bold text-xs pt-1 cursor-pointer"
+              >
+                Retreat to Map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Main Game Interface */}
       <div className="bg-white/80 backdrop-blur-md rounded-3xl p-4 md:p-6 shadow-xl border-4 border-indigo-100">
         
@@ -430,6 +611,39 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
           <div className="flex items-center gap-1.5 bg-indigo-50 border-2 border-indigo-100 px-3 py-1.5 rounded-2xl font-extrabold text-indigo-800 text-lg">
             <Clock size={20} />
             <span>{formatTime(gameState.time_spent)}</span>
+          </div>
+        </div>
+
+        {/* Combat Battle Arena */}
+        <div className="bg-indigo-950 text-white rounded-3xl p-4 mb-6 border-4 border-indigo-900 flex justify-between items-center relative overflow-hidden h-36 shadow-inner">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent pointer-events-none" />
+
+          {/* Player Side */}
+          <div className={`flex flex-col items-center gap-1 transition-all duration-300 w-24 ${playerAttacking ? 'translate-x-12 scale-110 z-20' : ''} ${playerHit ? 'animate-shake bg-red-900/40 rounded-2xl p-2' : ''}`}>
+            <span className="text-5xl select-none filter drop-shadow-[0_4px_6px_rgba(255,255,255,0.15)]">
+              {AVATARS[profile.avatar]?.emoji || "🧙‍♂️"}
+            </span>
+            <span className="text-xs font-black tracking-wide truncate max-w-full text-indigo-200">{profile.username}</span>
+            <div className="w-16 bg-gray-800 h-2 rounded-full overflow-hidden border border-gray-700 mt-1">
+              <div className="bg-red-500 h-full transition-all duration-300" style={{ width: `${(gameState.hearts / 3) * 100}%` }} />
+            </div>
+          </div>
+
+          {/* Clash Effect */}
+          <div className="flex flex-col items-center z-10">
+            <div className="text-amber-400 font-black text-2xl italic tracking-widest animate-pulse filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">VS</div>
+            {(playerAttacking || monsterAttacking) && (
+              <span className="absolute text-3xl animate-ping text-amber-300">💥</span>
+            )}
+          </div>
+
+          {/* Monster Side */}
+          <div className={`flex flex-col items-center gap-1 transition-all duration-300 w-24 ${monsterAttacking ? '-translate-x-12 scale-110 z-20' : ''} ${monsterHit ? 'animate-shake bg-red-900/40 rounded-2xl p-2' : ''}`}>
+            <span className="text-5xl select-none filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.15)]">{monster.avatar}</span>
+            <span className="text-xs font-black tracking-wide truncate max-w-full text-indigo-200">{monster.name}</span>
+            <div className="w-16 bg-gray-800 h-2 rounded-full overflow-hidden border border-gray-700 mt-1">
+              <div className="bg-green-500 h-full transition-all duration-300" style={{ width: `${monsterHp}%` }} />
+            </div>
           </div>
         </div>
 
@@ -468,6 +682,17 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
           >
             <Hourglass size={16} />
             <span>Glass ({getInventoryQuantity("hourglass")})</span>
+          </button>
+
+          {/* Potion */}
+          <button
+            onClick={handleUsePotion}
+            disabled={gameState.hearts >= 3 || getInventoryQuantity("life_potion") <= 0}
+            className="flex items-center gap-1 bg-white hover:bg-red-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-red-200 px-3 py-1.5 rounded-xl shadow-sm text-red-700 font-bold text-sm transition-all cursor-pointer"
+            title="Restore 1 magic heart"
+          >
+            <Heart size={16} className="text-red-500 fill-red-400" />
+            <span>Potion ({getInventoryQuantity("life_potion")})</span>
           </button>
         </div>
 

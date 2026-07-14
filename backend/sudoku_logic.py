@@ -83,7 +83,7 @@ class SudokuLogic:
         self.solve(grid)
         return grid
 
-    def remove_digits(self, grid: List[List[int]], difficulty: str) -> List[List[int]]:
+    def remove_digits(self, grid: List[List[int]], difficulty: str, level: int = 1) -> List[List[int]]:
         """Removes digits from a full grid to create a puzzle based on difficulty.
 
         Ensures there is exactly one unique solution.
@@ -92,21 +92,36 @@ class SudokuLogic:
         cells = [(r, c) for r in range(self.size) for c in range(self.size)]
         random.shuffle(cells)
 
+        # Scale challenge based on level within zone
+        clue_reduction = 0
+        if self.size == 4:
+            clue_reduction = (level - 1) // 2
+        elif self.size == 6:
+            clue_reduction = max(0, level - 6)
+        else:
+            clue_reduction = max(0, level - 11)
+
         # Target clues remaining based on size and difficulty
         if self.size == 4:
-            # 4x4: Easy needs ~6-8 clues, Hard ~4-5
-            target_clues = 8 if difficulty == "easy" else 5
+            # 4x4: Easy needs ~8 clues, Medium/Hard ~5 clues
+            target_clues = max(4, 8 - clue_reduction) if difficulty == "easy" else 5
         elif self.size == 6:
-            # 6x6: Easy ~18-20, Hard ~12-14
-            target_clues = 18 if difficulty == "easy" else 13
+            # 6x6: Easy ~18, Hard ~12
+            target_clues = max(10, 18 - clue_reduction) if difficulty == "easy" else 13
         else: # 9x9
-            # 9x9: Easy ~40-45, Medium ~30-35, Hard ~22-26
             if difficulty == "easy":
-                target_clues = 40
+                target_clues = max(38, 45 - clue_reduction)
             elif difficulty == "medium":
-                target_clues = 30
+                target_clues = max(28, 35 - clue_reduction)
+            elif difficulty == "hard":
+                target_clues = max(22, 26 - clue_reduction)
+            elif difficulty == "expert":
+                target_clues = max(18, 21 - clue_reduction)
+            elif difficulty == "master":
+                target_clues = max(17, 17 - clue_reduction) # 17 is minimum possible for unique 9x9
             else:
-                target_clues = 24
+                target_clues = max(28, 35 - clue_reduction) # fallback
+
 
         removed = 0
         max_cells_to_remove = (self.size * self.size) - target_clues
@@ -128,11 +143,11 @@ class SudokuLogic:
 
         return puzzle
 
-    def generate_puzzle(self, difficulty: str) -> Tuple[List[List[int]], List[List[int]]]:
+    def generate_puzzle(self, difficulty: str, level: int = 1) -> Tuple[List[List[int]], List[List[int]]]:
         """Generates a puzzle and its solution.
 
         Returns: (puzzle, solution)
         """
         solution = self.generate_full_grid()
-        puzzle = self.remove_digits(solution, difficulty)
+        puzzle = self.remove_digits(solution, difficulty, level)
         return puzzle, solution

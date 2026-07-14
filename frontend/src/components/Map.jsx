@@ -1,8 +1,11 @@
-import React from "react";
-import { Lock, Play, ShoppingBag, LogOut, Award, Coins } from "lucide-react";
+import React, { useState } from "react";
+import { Lock, Play, ShoppingBag, LogOut, Award, Coins, X } from "lucide-react";
 import { AVATARS } from "../utils/magic_emojis";
 
 export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
+  const [difficultyModal, setDifficultyModal] = useState(false);
+  const [pendingGridSize, setPendingGridSize] = useState(null);
+
   // Define zones mapping
   const zones = [
     {
@@ -148,7 +151,10 @@ export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
                       {/* Level bubble */}
                       <button
                         disabled={isLevelLocked}
-                        onClick={() => onSelectLevel(zone.size, zone.difficulty)}
+                        onClick={() => {
+                          setPendingGridSize(zone.size);
+                          setDifficultyModal(true);
+                        }}
                         className={`w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center relative font-extrabold text-xl shadow-lg transform transition-all z-10 ${
                           isLevelActive
                             ? "bg-candy-pink border-pink-600 text-white scale-110 animate-bounce cursor-pointer ring-4 ring-pink-300/40"
@@ -183,6 +189,37 @@ export default function Map({ profile, onSelectLevel, onOpenShop, onLogout }) {
           );
         })}
       </div>
+
+      {/* Difficulty Selection Modal */}
+      {difficultyModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 border-4 border-candy-purple text-center shadow-2xl relative animate-playful">
+            <button
+              onClick={() => setDifficultyModal(false)}
+              className="absolute top-4 right-4 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-full text-indigo-700 cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+            <h3 className="text-2xl font-extrabold text-indigo-900 mb-2">🔮 Choose Difficulty</h3>
+            <p className="text-xs text-indigo-500 font-semibold mb-6">Select your spell strength for this quest!</p>
+            
+            <div className="space-y-3">
+              {["easy", "medium", "hard", ...(pendingGridSize === 9 ? ["expert", "master"] : [])].map((diff) => (
+                <button
+                  key={diff}
+                  onClick={() => {
+                    setDifficultyModal(false);
+                    onSelectLevel(pendingGridSize, diff);
+                  }}
+                  className="w-full bg-indigo-50 hover:bg-candy-purple hover:text-white text-indigo-900 font-extrabold py-3 px-4 rounded-xl border-2 border-indigo-200 transition-all capitalize cursor-pointer"
+                >
+                  {diff}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
