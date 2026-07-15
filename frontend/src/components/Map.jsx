@@ -7,14 +7,16 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
   const [showDevPanel, setShowDevPanel] = useState(false);
   const [devLevel, setDevLevel] = useState(profile.current_level);
   const [devCoins, setDevCoins] = useState(profile.coins);
+  const [devStage, setDevStage] = useState(1);
 
   // Sync dev panel states with profile updates when panel is opened
   useEffect(() => {
     if (showDevPanel && profile) {
       setDevLevel(profile.current_level);
       setDevCoins(profile.coins);
+      setDevStage(activeGame ? activeGame.stage : 1);
     }
-  }, [showDevPanel, profile]);
+  }, [showDevPanel, profile, activeGame]);
 
   // Define zones mapping
   const zones = [
@@ -59,7 +61,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
   const handleApplyDevCheats = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`/api/debug/set-progress?level=${devLevel}&coins=${devCoins}`, {
+      const res = await fetch(`/api/debug/set-progress?level=${devLevel}&coins=${devCoins}&stage=${devStage}`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -258,6 +260,18 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
                   max="15"
                   value={devLevel}
                   onChange={(e) => setDevLevel(parseInt(e.target.value) || 1)}
+                  className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              
+              <div className="text-left">
+                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Stage (1-50)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={devStage}
+                  onChange={(e) => setDevStage(parseInt(e.target.value) || 1)}
                   className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
                 />
               </div>

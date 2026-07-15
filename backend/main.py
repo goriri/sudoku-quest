@@ -266,11 +266,14 @@ def buy_item(
 def set_progress(
     level: int,
     coins: int,
+    stage: int = 1,
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
     if level < 1 or level > 15:
         raise HTTPException(status_code=400, detail="Level must be between 1 and 15")
+    if stage < 1 or stage > 50:
+        raise HTTPException(status_code=400, detail="Stage must be between 1 and 50")
     
     if level <= 5:
         zone = 1
@@ -285,10 +288,31 @@ def set_progress(
     
     if current_user.active_game:
         db.delete(current_user.active_game)
-        
+    db.commit()
+    
+    # Initialize a new active game starting at the target stage
+    from backend.sudoku_logic import SudokuLogic
+    size = 4 if level <= 5 else 6 if level <= 10 else 9
+    difficulty = crud.get_difficulty_for_stage(size, stage)
+    sl = SudokuLogic(size=size)
+    puzzle, solution = sl.generate_puzzle(difficulty, level)
+    
+    db_game = models.ActiveGame(
+        user_id=current_user.id,
+        grid=puzzle,
+        solution=solution,
+        original_grid=puzzle,
+        size=size,
+        difficulty=difficulty,
+        stage=stage,
+        hearts=3,
+        time_spent=0
+    )
+    db.add(db_game)
     db.commit()
     db.refresh(current_user)
-    return {"success": True, "message": f"Progress set to Level {level}, Coins {coins}"}
+    
+    return {"success": True, "message": f"Progress set to Level {level}, Stage {stage}, Coins {coins}"}
 
 
 # Static files hosting (for serving production React builds)

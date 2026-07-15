@@ -149,15 +149,16 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     await page.click('button[title="🔧 Developer Cheats"]', { force: true });
     await expect(page.locator('h3:has-text("Developer Portal")')).toBeVisible();
 
-    // Fill level 12 and 600 coins
+    // Fill level 12, stage 1, and 600 coins
     await page.fill('input[type="number"] >> nth=0', '12');
-    await page.fill('input[type="number"] >> nth=1', '600');
+    await page.fill('input[type="number"] >> nth=1', '1');
+    await page.fill('input[type="number"] >> nth=2', '600');
 
     // Click apply cheats button
     await page.click('button:has-text("Cast Magic Cheat Spell!")', { force: true });
 
     // Verify stats updated on Map page
-    await expect(page.locator('text=Level 12')).toBeVisible();
+    await expect(page.getByText('Level 12 (XP: 0)')).toBeVisible();
     await expect(page.getByText('600', { exact: true })).toBeVisible();
   });
 });

@@ -348,4 +348,16 @@ def test_set_progress():
     assert profile["current_zone"] == 3
     assert profile["coins"] == 500
 
+    # Set progress with specific stage=49
+    res_stage = client.post("/api/debug/set-progress?level=1&coins=200&stage=49", headers=headers)
+    assert res_stage.status_code == 200
+    assert res_stage.json()["success"] is True
+
+    # Check active game stage state
+    game_state_res = client.get("/api/game/state", headers=headers)
+    game_state = game_state_res.json()
+    assert game_state is not None
+    assert game_state["stage"] == 49
+    assert game_state["difficulty"] == "hard" # Stage 49 of 4x4 size is hard
+
 
