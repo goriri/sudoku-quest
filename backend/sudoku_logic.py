@@ -95,11 +95,11 @@ class SudokuLogic:
         # Scale challenge based on level within zone
         clue_reduction = 0
         if self.size == 4:
-            clue_reduction = (level - 1) // 2
+            clue_reduction = (level - 1) // 4
         elif self.size == 6:
-            clue_reduction = max(0, level - 6)
+            clue_reduction = max(0, (level - 16) // 4)
         else:
-            clue_reduction = max(0, level - 11)
+            clue_reduction = max(0, (level - 36) // 2)
 
         # Target clues remaining based on size and difficulty
         if self.size == 4:

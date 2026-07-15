@@ -336,15 +336,15 @@ def test_set_progress():
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Set progress to level 12 and 500 coins
-    res = client.post("/api/debug/set-progress?level=12&coins=500", headers=headers)
+    # Set progress to level 42 and 500 coins
+    res = client.post("/api/debug/set-progress?level=42&coins=500", headers=headers)
     assert res.status_code == 200
     assert res.json()["success"] is True
 
     # Check profile
     profile_res = client.get("/api/auth/profile", headers=headers)
     profile = profile_res.json()
-    assert profile["current_level"] == 12
+    assert profile["current_level"] == 42
     assert profile["current_zone"] == 3
     assert profile["coins"] == 500
 

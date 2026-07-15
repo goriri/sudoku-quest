@@ -14,7 +14,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
       id: 1,
       name: "Whispering Woods",
       description: "Simple 4x4 Magic Grids",
-      levels: [1, 2, 3, 4, 5],
+      levels: Array.from({ length: 15 }, (_, i) => i + 1),
       color: "bg-emerald-50 border-emerald-200",
       textColor: "text-emerald-700",
       bubbleBg: "bg-emerald-400 border-emerald-600 text-white",
@@ -26,7 +26,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
       id: 2,
       name: "Crystal Caves",
       description: "Intermediate 6x6 Gem Grids",
-      levels: [6, 7, 8, 9, 10],
+      levels: Array.from({ length: 20 }, (_, i) => i + 16),
       color: "bg-indigo-50 border-indigo-200",
       textColor: "text-indigo-700",
       bubbleBg: "bg-indigo-400 border-indigo-600 text-white",
@@ -38,7 +38,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
       id: 3,
       name: "Cloud Castle",
       description: "Master 9x9 Royal Grids",
-      levels: [11, 12, 13, 14, 15],
+      levels: Array.from({ length: 15 }, (_, i) => i + 36),
       color: "bg-amber-50 border-amber-200",
       textColor: "text-amber-700",
       bubbleBg: "bg-amber-400 border-amber-600 text-white",
@@ -243,11 +243,11 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
             
             <div className="space-y-4 mb-6">
               <div className="text-left">
-                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Quest Level (1-15)</label>
+                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Quest Level (1-50)</label>
                 <input
                   type="number"
                   min="1"
-                  max="15"
+                  max="50"
                   value={devLevel}
                   onChange={(e) => setDevLevel(parseInt(e.target.value) || 1)}
                   className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
