@@ -725,51 +725,58 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         </div>
 
         {/* Inventory Quick Use Panel */}
-        <div className="flex items-center justify-center gap-4 bg-indigo-50/40 p-3 rounded-2xl border-2 border-indigo-100/50 mb-6">
-          <div className="text-xs font-bold text-indigo-500 uppercase tracking-wide mr-1">Magic Items:</div>
-          
-          {/* Wand / Hint */}
+        {/* Inventory Quick Use Panel */}
+        <div className="flex items-center justify-center gap-3.5 bg-indigo-50/50 p-2.5 rounded-2xl border-2 border-indigo-100/50 mb-6 max-w-sm mx-auto">
+          {/* Wand */}
           <button
             onClick={handleUseWand}
             disabled={!selectedCell || getInventoryQuantity("hint_wand") <= 0}
-            className="flex items-center gap-1 bg-white hover:bg-purple-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-purple-200 px-3 py-1.5 rounded-xl shadow-sm text-purple-700 font-bold text-sm transition-all cursor-pointer"
-            title="Reveal selected cell"
+            className="relative w-12 h-12 bg-white hover:bg-purple-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-purple-200 border-b-4 hover:border-purple-300 rounded-2xl flex items-center justify-center shadow-md active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer"
+            title="Wand: Reveal selected cell"
           >
-            <Wand2 size={16} />
-            <span>Wand ({getInventoryQuantity("hint_wand")})</span>
+            <Wand2 className="text-purple-600" size={20} />
+            <span className="absolute -top-1.5 -right-1.5 bg-purple-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+              {getInventoryQuantity("hint_wand")}
+            </span>
           </button>
 
           {/* Shield */}
           <button
             onClick={handleUseShield}
             disabled={activeShield || getInventoryQuantity("crystal_shield") <= 0}
-            className="flex items-center gap-1 bg-white hover:bg-blue-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-blue-200 px-3 py-1.5 rounded-xl shadow-sm text-blue-700 font-bold text-sm transition-all cursor-pointer"
-            title="Shield mistake protector"
+            className="relative w-12 h-12 bg-white hover:bg-blue-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-blue-200 border-b-4 hover:border-blue-300 rounded-2xl flex items-center justify-center shadow-md active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer"
+            title="Shield: Protect next mistake"
           >
-            <Shield size={16} />
-            <span>Shield ({getInventoryQuantity("crystal_shield")})</span>
+            <Shield className="text-blue-500 fill-blue-50" size={20} />
+            <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+              {getInventoryQuantity("crystal_shield")}
+            </span>
           </button>
 
           {/* Hourglass */}
           <button
             onClick={handleUseHourglass}
             disabled={getInventoryQuantity("hourglass") <= 0}
-            className="flex items-center gap-1 bg-white hover:bg-yellow-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-yellow-200 px-3 py-1.5 rounded-xl shadow-sm text-yellow-700 font-bold text-sm transition-all cursor-pointer"
-            title="Minus 60 seconds from timer"
+            className="relative w-12 h-12 bg-white hover:bg-yellow-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-yellow-200 border-b-4 hover:border-yellow-300 rounded-2xl flex items-center justify-center shadow-md active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer"
+            title="Hourglass: Reduce timer by 60s"
           >
-            <Hourglass size={16} />
-            <span>Glass ({getInventoryQuantity("hourglass")})</span>
+            <Hourglass className="text-yellow-600" size={20} />
+            <span className="absolute -top-1.5 -right-1.5 bg-yellow-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+              {getInventoryQuantity("hourglass")}
+            </span>
           </button>
 
           {/* Potion */}
           <button
             onClick={handleUsePotion}
             disabled={gameState.hearts >= 3 || getInventoryQuantity("life_potion") <= 0}
-            className="flex items-center gap-1 bg-white hover:bg-red-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-red-200 px-3 py-1.5 rounded-xl shadow-sm text-red-700 font-bold text-sm transition-all cursor-pointer"
-            title="Restore 1 magic heart"
+            className="relative w-12 h-12 bg-white hover:bg-red-50 disabled:bg-gray-100 disabled:opacity-50 border-2 border-red-200 border-b-4 hover:border-red-300 rounded-2xl flex items-center justify-center shadow-md active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer"
+            title="Life Potion: Restore 1 heart"
           >
-            <Heart size={16} className="text-red-500 fill-red-400" />
-            <span>Potion ({getInventoryQuantity("life_potion")})</span>
+            <Heart className="text-red-500 fill-red-400" size={20} />
+            <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+              {getInventoryQuantity("life_potion")}
+            </span>
           </button>
         </div>
 
@@ -845,15 +852,15 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
         )}
 
         {/* Keyboard input block */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6">
           {keys.map((num) => (
             <button
               key={num}
               disabled={!selectedCell}
               onClick={() => handleInputVal(num)}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-md border-b-4 border-indigo-500 active:translate-y-0.5 active:border-b-0 transition-all cursor-pointer ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-md border-b-4 active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer ${
                 selectedCell
-                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  ? "bg-candy-yellow hover:bg-amber-400 text-amber-950 border-amber-500"
                   : "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
               }`}
             >
@@ -865,13 +872,13 @@ export default function Game({ size, difficulty, profile, onBackToMap, onUpdateP
           <button
             disabled={!selectedCell}
             onClick={() => handleInputVal(0)}
-            className={`px-4 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm shadow-md border-b-4 border-red-500 active:translate-y-0.5 active:border-b-0 transition-all cursor-pointer ${
+            className={`px-4 h-12 rounded-xl flex items-center justify-center font-extrabold text-sm shadow-md border-b-4 active:translate-y-0.5 active:border-b-2 transition-all cursor-pointer ${
               selectedCell
-                ? "bg-red-500 hover:bg-red-600 text-white"
+                ? "bg-rose-100 hover:bg-rose-200 text-rose-700 border-rose-400"
                 : "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
             }`}
           >
-            Erase
+            Erase 🧹
           </button>
         </div>
 

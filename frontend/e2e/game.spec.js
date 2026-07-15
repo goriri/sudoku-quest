@@ -79,7 +79,8 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     // 5. Start Game (Level 1)
     await page.click('button:has-text("Play")', { force: true });
     await expect(page.locator('text=STAGE 1 OF 50')).toBeVisible();
-    await expect(page.locator('text=Wand (1)')).toBeVisible(); // 1 wand in inventory
+    await expect(page.locator('button[title="Wand: Reveal selected cell"]')).toBeVisible();
+    await expect(page.locator('button[title="Wand: Reveal selected cell"] span')).toHaveText('1');
 
     // 6. Fetch correct solution from DB
     const solution = getCorrectSolution(username);
@@ -148,16 +149,16 @@ test.describe('Sudoku Quest Adventure E2E', () => {
     await page.click('button[title="🔧 Developer Cheats"]', { force: true });
     await expect(page.locator('h3:has-text("Developer Portal")')).toBeVisible();
 
-    // Fill level 42 and 600 coins
-    await page.fill('input[type="number"] >> nth=0', '42');
+    // Fill level 12 and 600 coins
+    await page.fill('input[type="number"] >> nth=0', '12');
     await page.fill('input[type="number"] >> nth=1', '600');
 
     // Click apply cheats button
     await page.click('button:has-text("Cast Magic Cheat Spell!")', { force: true });
 
     // Verify stats updated on Map page
-    await expect(page.locator('text=Level 42')).toBeVisible();
-    await expect(page.locator('text=600')).toBeVisible();
+    await expect(page.locator('text=Level 12')).toBeVisible();
+    await expect(page.getByText('600', { exact: true })).toBeVisible();
   });
 });
 

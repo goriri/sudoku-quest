@@ -119,13 +119,14 @@ export default function Login({ onLoginSuccess }) {
                     key={key}
                     type="button"
                     onClick={() => setAvatar(key)}
-                    className={`p-3 rounded-2xl border-3 text-left font-bold transition-all ${
+                    className={`p-3 rounded-2xl border-3 flex items-center gap-2 font-bold transition-all cursor-pointer ${
                       avatar === key
                         ? "border-indigo-600 bg-indigo-50 scale-102"
                         : "border-indigo-100 bg-white/40 hover:bg-indigo-50/20"
                     }`}
                   >
-                    <div className="text-sm text-indigo-800">{info.label}</div>
+                    <span className="text-2xl select-none">{info.emoji}</span>
+                    <div className="text-xs text-indigo-800 leading-tight">{info.label}</div>
                   </button>
                 ))}
               </div>

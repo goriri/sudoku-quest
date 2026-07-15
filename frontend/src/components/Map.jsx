@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Lock, Play, ShoppingBag, LogOut, Award, Coins, X, Wrench } from "lucide-react";
 import { AVATARS } from "../utils/magic_emojis";
 
@@ -8,13 +8,21 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
   const [devLevel, setDevLevel] = useState(profile.current_level);
   const [devCoins, setDevCoins] = useState(profile.coins);
 
+  // Sync dev panel states with profile updates when panel is opened
+  useEffect(() => {
+    if (showDevPanel && profile) {
+      setDevLevel(profile.current_level);
+      setDevCoins(profile.coins);
+    }
+  }, [showDevPanel, profile]);
+
   // Define zones mapping
   const zones = [
     {
       id: 1,
       name: "Whispering Woods",
       description: "Simple 4x4 Magic Grids",
-      levels: Array.from({ length: 15 }, (_, i) => i + 1),
+      levels: [1, 2, 3, 4, 5],
       color: "bg-emerald-50 border-emerald-200",
       textColor: "text-emerald-700",
       bubbleBg: "bg-emerald-400 border-emerald-600 text-white",
@@ -26,7 +34,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
       id: 2,
       name: "Crystal Caves",
       description: "Intermediate 6x6 Gem Grids",
-      levels: Array.from({ length: 20 }, (_, i) => i + 16),
+      levels: [6, 7, 8, 9, 10],
       color: "bg-indigo-50 border-indigo-200",
       textColor: "text-indigo-700",
       bubbleBg: "bg-indigo-400 border-indigo-600 text-white",
@@ -38,7 +46,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
       id: 3,
       name: "Cloud Castle",
       description: "Master 9x9 Royal Grids",
-      levels: Array.from({ length: 15 }, (_, i) => i + 36),
+      levels: [11, 12, 13, 14, 15],
       color: "bg-amber-50 border-amber-200",
       textColor: "text-amber-700",
       bubbleBg: "bg-amber-400 border-amber-600 text-white",
@@ -80,7 +88,7 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
         {/* User Info */}
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-full bg-gradient-to-tr ${getAvatarInfo().color} flex items-center justify-center text-2xl shadow-inner`}>
-            {profile.avatar === "wizard" ? "🧙‍♂️" : profile.avatar === "fairy" ? "🧚‍♀️" : profile.avatar === "knight" ? "🛡️" : "🧝‍♂️"}
+            {AVATARS[profile.avatar]?.emoji || "🧙‍♂️"}
           </div>
           <div>
             <h2 className="font-extrabold text-indigo-900 text-lg leading-tight">
@@ -144,10 +152,10 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
 
       {/* Main Map Journey */}
       <div className="space-y-8">
-        <h1 className="text-4xl font-extrabold text-indigo-900 text-center tracking-wide mb-2">
+        <h1 className="text-4xl font-extrabold text-indigo-900 text-center tracking-wide mb-1">
           Your Magic Adventure
         </h1>
-        <p className="text-center text-indigo-500 font-medium -mt-6 mb-8">
+        <p className="text-center text-indigo-500 font-bold mt-2 mb-8">
           Complete Sudoku challenges to unlock new regions!
         </p>
 
@@ -203,9 +211,9 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
                         {isLevelLocked ? (
                           <Lock size={20} />
                         ) : isLevelActive ? (
-                          <div className="flex flex-col items-center">
-                            <span className="text-[10px] uppercase font-bold tracking-wider -mb-1">Play</span>
-                            <Play size={18} fill="white" />
+                          <div className="flex flex-col items-center leading-none">
+                            <span className="text-[9px] uppercase font-black tracking-wider -mb-0.5">Play</span>
+                            <span className="text-base font-black">{lvl}</span>
                           </div>
                         ) : (
                           <span>{lvl}</span>
@@ -243,11 +251,11 @@ export default function Map({ profile, activeGame, onSelectLevel, onOpenShop, on
             
             <div className="space-y-4 mb-6">
               <div className="text-left">
-                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Quest Level (1-50)</label>
+                <label className="block text-xs font-bold text-indigo-900 mb-1">Target Quest Level (1-15)</label>
                 <input
                   type="number"
                   min="1"
-                  max="50"
+                  max="15"
                   value={devLevel}
                   onChange={(e) => setDevLevel(parseInt(e.target.value) || 1)}
                   className="w-full bg-indigo-50 border-2 border-indigo-200 rounded-xl py-2 px-3 font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"

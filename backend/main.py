@@ -197,12 +197,12 @@ def submit_game(
         level_completed = True
         next_stage = 1
         next_level = current_user.current_level + 1
-        if next_level > 50:
-            next_level = 50
+        if next_level > 15:
+            next_level = 15
         else:
-            if next_level >= 36:
+            if next_level >= 11:
                 next_zone = 3
-            elif next_level >= 16:
+            elif next_level >= 6:
                 next_zone = 2
             else:
                 next_zone = 1
@@ -269,12 +269,12 @@ def set_progress(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    if level < 1 or level > 50:
-        raise HTTPException(status_code=400, detail="Level must be between 1 and 50")
+    if level < 1 or level > 15:
+        raise HTTPException(status_code=400, detail="Level must be between 1 and 15")
     
-    if level <= 15:
+    if level <= 5:
         zone = 1
-    elif level <= 35:
+    elif level <= 10:
         zone = 2
     else:
         zone = 3
